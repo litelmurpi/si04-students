@@ -152,7 +152,7 @@
           <h2>Edit Student</h2>
           <button class="close-btn" onclick="closeEditModal()">×</button>
         </div>
-        <form id="editForm">
+        <form id="editForm" onsubmit="return false;">
           <input type="hidden" id="editId" />
           <div class="form-group">
             <label>Student ID</label>
@@ -228,7 +228,7 @@
         <p>
           Please enter your Supabase credentials to connect to the database.
         </p>
-        <form id="configForm">
+        <div id="configForm">
           <div class="form-group">
             <label for="supabaseUrl">Supabase URL</label>
             <input
@@ -263,16 +263,18 @@
             </small>
           </div>
           <div style="display: flex; gap: 1rem; margin-top: 1.5rem">
-            <button type="submit" class="btn btn-primary">Connect</button>
             <button
               type="button"
-              class="btn"
-              onclick="testConnection(); return false;"
+              class="btn btn-primary"
+              onclick="handleConnect()"
             >
+              Connect
+            </button>
+            <button type="button" class="btn" onclick="testConnection()">
               Test Connection
             </button>
           </div>
-        </form>
+        </div>
         <div id="testResult" style="margin-top: 1rem"></div>
       </div>
     </div>

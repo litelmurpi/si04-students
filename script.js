@@ -173,37 +173,6 @@ function setupEventListeners() {
     `;
   });
 
-  // Configuration form
-  configForm.addEventListener("submit", async (e) => {
-    e.preventDefault(); // Ini sudah ada, pastikan tidak ada yang menggangu
-
-    const url = document.getElementById("supabaseUrl").value.trim();
-    const key = document.getElementById("supabaseKey").value.trim();
-
-    if (!url.startsWith("https://") || !url.includes(".supabase.co")) {
-      alert(
-        "Please enter a valid Supabase URL (https://[project-ref].supabase.co)"
-      );
-      return;
-    }
-
-    SUPABASE_CONFIG.url = url;
-    SUPABASE_CONFIG.anonKey = key;
-    localStorage.setItem(
-      "supabaseConfig",
-      JSON.stringify({ url, anonKey: key })
-    );
-
-    configModal.classList.remove("show");
-
-    // Pastikan tidak ada redirect
-    setTimeout(() => {
-      init(); // Reinitialize app
-    }, 100);
-
-    return false; // Tambahan untuk memastikan form tidak submit
-  });
-
   // Edit form
   document.getElementById("editForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -264,6 +233,36 @@ function setupEventListeners() {
   });
 }
 
+// Handle Connect button
+window.handleConnect = async function () {
+  const url = document.getElementById("supabaseUrl").value.trim();
+  const key = document.getElementById("supabaseKey").value.trim();
+
+  if (!url || !key) {
+    alert("Please enter both URL and Anon Key");
+    return;
+  }
+
+  if (!url.startsWith("https://") || !url.includes(".supabase.co")) {
+    alert(
+      "Please enter a valid Supabase URL (https://[project-ref].supabase.co)"
+    );
+    return;
+  }
+
+  SUPABASE_CONFIG.url = url;
+  SUPABASE_CONFIG.anonKey = key;
+  localStorage.setItem("supabaseConfig", JSON.stringify({ url, anonKey: key }));
+
+  const configModal = document.getElementById("configModal");
+  configModal.classList.remove("show");
+
+  // Reinitialize app
+  setTimeout(() => {
+    init();
+  }, 100);
+};
+
 // Show configuration modal
 function showConfigModal() {
   if (!configModal) {
@@ -279,17 +278,15 @@ function showConfigModal() {
     document.getElementById("supabaseKey").value = SUPABASE_CONFIG.anonKey;
   }
 
-  // Reset test result
+  // Clear test result
   const testResult = document.getElementById("testResult");
   if (testResult) {
     testResult.innerHTML = "";
   }
-
-  // Focus on first input
-  setTimeout(() => {
-    document.getElementById("supabaseUrl").focus();
-  }, 100);
 }
+
+// Make showConfigModal global
+window.showConfigModal = showConfigModal;
 
 // Update connection status
 function updateConnectionStatus(status, text) {
@@ -542,6 +539,11 @@ function openEditModal(studentId) {
 
   document.getElementById("editModal").classList.add("show");
 }
+
+// Make functions global
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+window.exportData = exportData;
 
 // Close edit modal
 function closeEditModal() {
