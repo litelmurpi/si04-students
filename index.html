@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Directory - Supabase</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Student Directory</h1>
+        <p class="subtitle">Student Management System</p>
+        <div class="connection-status" id="connectionStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">Connecting...</span>
+        </div>
+      </header>
+
+      <div class="search-container">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by name or ID..."
+          class="search-input"
+        />
+        <div class="search-icon">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </div>
+      </div>
+
+      <div class="filter-container">
+        <select id="statusFilter" class="filter-select">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="graduated">Graduated</option>
+          <option value="dropped_out">Dropped Out</option>
+          <option value="suspended">Suspended</option>
+        </select>
+        <select id="gradeFilter" class="filter-select">
+          <option value="">All Grades</option>
+          <option value="A">Grade A</option>
+          <option value="B">Grade B</option>
+          <option value="C">Grade C</option>
+          <option value="D">Grade D</option>
+          <option value="E">Grade E</option>
+        </select>
+      </div>
+
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-number" id="totalStudents">0</span>
+          <span class="stat-label">Total Students</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="activeStudents">0</span>
+          <span class="stat-label">Active</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="avgAttendance">0%</span>
+          <span class="stat-label">Avg Attendance</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="displayedStudents">0</span>
+          <span class="stat-label">Displayed</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-refresh" id="refreshBtn">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M23 4v6h-6"></path>
+            <path d="M1 20v-6h6"></path>
+            <path
+              d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+            ></path>
+          </svg>
+          Refresh
+        </button>
+        <select class="sort-select" id="sortSelect">
+          <option value="id-asc">ID (Ascending)</option>
+          <option value="id-desc">ID (Descending)</option>
+          <option value="name-asc">Name (A-Z)</option>
+          <option value="name-desc">Name (Z-A)</option>
+          <option value="grade-asc">Grade (Best First)</option>
+          <option value="attendance-desc">Attendance (High to Low)</option>
+        </select>
+        <button class="btn" onclick="showConfigModal()">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"
+            ></path>
+          </svg>
+          Settings
+        </button>
+        <button class="btn btn-primary" onclick="exportData()">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export
+        </button>
+      </div>
+
+      <div id="studentList" class="student-list">
+        <div class="loader">
+          <div class="spinner"></div>
+          <p>Loading students from database...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Edit Student</h2>
+          <button class="close-btn" onclick="closeEditModal()">×</button>
+        </div>
+        <form id="editForm">
+          <input type="hidden" id="editId" />
+          <div class="form-group">
+            <label>Student ID</label>
+            <input
+              type="text"
+              id="editStudentId"
+              readonly
+              class="readonly-input"
+            />
+          </div>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              id="editFullName"
+              readonly
+              class="readonly-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editStatus">Status</label>
+            <select id="editStatus" required>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="graduated">Graduated</option>
+              <option value="dropped_out">Dropped Out</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editGrade">Grade</label>
+            <select id="editGrade">
+              <option value="">Not Graded</option>
+              <option value="A">A (Excellent)</option>
+              <option value="B">B (Good)</option>
+              <option value="C">C (Average)</option>
+              <option value="D">D (Below Average)</option>
+              <option value="E">E (Poor)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editAttendance">Attendance %</label>
+            <input
+              type="number"
+              id="editAttendance"
+              min="0"
+              max="100"
+              step="1"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editNotes">Notes</label>
+            <textarea
+              id="editNotes"
+              rows="3"
+              placeholder="Additional notes about the student..."
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn" onclick="closeEditModal()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div class="modal" id="configModal">
+      <div class="modal-content">
+        <h2>Supabase Configuration</h2>
+        <p>
+          Please enter your Supabase credentials to connect to the database.
+        </p>
+        <form id="configForm">
+          <div class="form-group">
+            <label for="supabaseUrl">Supabase URL</label>
+            <input
+              type="text"
+              id="supabaseUrl"
+              placeholder="https://your-project.supabase.co"
+              required
+            />
+            <small style="color: #6b7280; display: block; margin-top: 0.25rem">
+              Find this in your Supabase dashboard → Settings → API
+            </small>
+          </div>
+          <div class="form-group">
+            <label for="supabaseKey">Anon Key</label>
+            <textarea
+              id="supabaseKey"
+              placeholder="Your anon public key"
+              rows="4"
+              required
+              style="
+                width: 100%;
+                padding: 0.625rem 1rem;
+                border: 1px solid #e5e7eb;
+                border-radius: 0.5rem;
+                font-size: 0.875rem;
+                font-family: monospace;
+                resize: vertical;
+              "
+            ></textarea>
+            <small style="color: #6b7280; display: block; margin-top: 0.25rem">
+              This is your public anon key, not the service role key
+            </small>
+          </div>
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem">
+            <button type="submit" class="btn btn-primary">Connect</button>
+            <button type="button" class="btn" onclick="testConnection()">
+              Test Connection
+            </button>
+          </div>
+        </form>
+        <div id="testResult" style="margin-top: 1rem"></div>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+    <script>
+      // Test connection function
+      async function testConnection() {
+        const url = document.getElementById("supabaseUrl").value.trim();
+        const key = document.getElementById("supabaseKey").value.trim();
+        const resultDiv = document.getElementById("testResult");
+
+        if (!url || !key) {
+          resultDiv.innerHTML =
+            '<p style="color: #ef4444;">Please enter both URL and key</p>';
+          return;
+        }
+
+        resultDiv.innerHTML =
+          '<p style="color: #6b7280;">Testing connection...</p>';
+
+        try {
+          const testClient = window.supabase.createClient(url, key);
+          const { data, error } = await testClient
+            .from("students")
+            .select("count", { count: "exact", head: true });
+
+          if (error) {
+            resultDiv.innerHTML = `<p style="color: #ef4444;">Connection failed: ${error.message}</p>`;
+          } else {
+            resultDiv.innerHTML =
+              '<p style="color: #10b981;">Connection successful!</p>';
+          }
+        } catch (err) {
+          resultDiv.innerHTML = `<p style="color: #ef4444;">Error: ${err.message}</p>`;
+        }
+      }
+    </script>
+  </body>
+</html>
