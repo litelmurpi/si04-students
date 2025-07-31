@@ -104,13 +104,13 @@ function setupEventListeners() {
   // Search input
   searchInput.addEventListener("input", applyAllFilters);
 
-  // Filter selects
-  document
-    .getElementById("statusFilter")
-    .addEventListener("change", applyAllFilters);
-  document
-    .getElementById("gradeFilter")
-    .addEventListener("change", applyAllFilters);
+  // Filter selects - COMMENTED OUT since HTML filters are commented
+  // document
+  //   .getElementById("statusFilter")
+  //   .addEventListener("change", applyAllFilters);
+  // document
+  //   .getElementById("gradeFilter")
+  //   .addEventListener("change", applyAllFilters);
 
   // Sort select
   sortSelect.addEventListener("change", (e) => {
@@ -554,8 +554,9 @@ function closeEditModal() {
 // Apply all filters
 function applyAllFilters() {
   const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
-  const statusFilter = document.getElementById("statusFilter")?.value || "";
-  const gradeFilter = document.getElementById("gradeFilter")?.value || "";
+  // Comment out filter functionality since HTML filters are commented
+  // const statusFilter = document.getElementById("statusFilter")?.value || "";
+  // const gradeFilter = document.getElementById("gradeFilter")?.value || "";
 
   filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -563,11 +564,14 @@ function applyAllFilters() {
       student.student_id.toLowerCase().includes(searchTerm) ||
       student.full_name.toLowerCase().includes(searchTerm);
 
-    const matchesStatus =
-      statusFilter === "" || student.status === statusFilter;
-    const matchesGrade = gradeFilter === "" || student.grade === gradeFilter;
+    // Comment out filter matching since HTML filters are commented
+    // const matchesStatus =
+    //   statusFilter === "" || student.status === statusFilter;
+    // const matchesGrade = gradeFilter === "" || student.grade === gradeFilter;
 
-    return matchesSearch && matchesStatus && matchesGrade;
+    // Only apply search filter for now
+    return matchesSearch;
+    // return matchesSearch && matchesStatus && matchesGrade;
   });
 
   displayStudents();
