@@ -175,7 +175,7 @@ function setupEventListeners() {
 
   // Configuration form
   configForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Ini sudah ada, pastikan tidak ada yang menggangu
 
     const url = document.getElementById("supabaseUrl").value.trim();
     const key = document.getElementById("supabaseKey").value.trim();
@@ -195,7 +195,13 @@ function setupEventListeners() {
     );
 
     configModal.classList.remove("show");
-    init();
+
+    // Pastikan tidak ada redirect
+    setTimeout(() => {
+      init(); // Reinitialize app
+    }, 100);
+
+    return false; // Tambahan untuk memastikan form tidak submit
   });
 
   // Edit form
@@ -272,6 +278,17 @@ function showConfigModal() {
   if (SUPABASE_CONFIG.anonKey) {
     document.getElementById("supabaseKey").value = SUPABASE_CONFIG.anonKey;
   }
+
+  // Reset test result
+  const testResult = document.getElementById("testResult");
+  if (testResult) {
+    testResult.innerHTML = "";
+  }
+
+  // Focus on first input
+  setTimeout(() => {
+    document.getElementById("supabaseUrl").focus();
+  }, 100);
 }
 
 // Update connection status
